@@ -33,3 +33,6 @@ $Script:PSModuleVersion = (Import-PowerShellDataFile -Path "$Script:PSModulePath
 # Define module behaviour
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 'Latest'
+
+# Now, register all available DSC resource functions
+# Get-DscResource | Register-DscResourceFunction -Scope 'Script'
