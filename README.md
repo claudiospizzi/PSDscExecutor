@@ -7,11 +7,21 @@ Create and execute PowerShell DSC configurations without using the LCM.
 
 ## Introduction
 
-ToDo.
+The PSDscExecutor uses the `Invoke-DscResource` cmdlet to invoke a DSC
+configuration without the need of manual compiling and invoking via a DSC LCM.
+This is especially useful, if DSC is used to configure cloud services like
+Microsoft 365.
 
 ## Features
 
-ToDo.
+* **Get-DesiredState**  
+  Get the current state of all resources in a configuration.
+
+* **Test-DesiredState**  
+  Test if all resources in a configuration are in the desired state.
+
+* **Set-DesiredState**  
+  Apply the desired state configuration to the targets.
 
 ## Versions
 

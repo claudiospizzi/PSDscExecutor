@@ -2,5 +2,74 @@
 <Configuration>
   <ViewDefinitions>
 
+
+
+  <!--
+    PSDscExecutor.Result.Get
+    PSDscExecutor.Result.Set
+    PSDscExecutor.Result.Test
+    PSDscExecutor.Result.Invoke
+    PSDscExecutor.ModuleInfo
+    PSDscExecutor.Configuration
+    PSDscExecutor.Configuration.Resource
+    -->
+
+
+
+<!--
+    <View>
+      <Name>ArcadeTools.AccessEntry</Name>
+      <ViewSelectedBy>
+        <TypeName>ArcadeTools.AccessEntry</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>8</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Principal</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>AccessRight</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>IsInherited</Label>
+            <Width>12</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>AppliesTo</Label>
+            <Width>34</Width>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Type</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Principal</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>AccessRight</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>IsInherited</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>AppliesTo</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View> -->
+
+
   </ViewDefinitions>
 </Configuration>

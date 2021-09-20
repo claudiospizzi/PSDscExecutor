@@ -24,7 +24,7 @@
     Description = 'Create and execute PowerShell DSC configurations without using the LCM.'
 
     # Minimum version of the Windows PowerShell engine required by this module
-    PowerShellVersion = '7.1'
+    PowerShellVersion = '5.1'
 
     # Name of the Windows PowerShell host required by this module
     # PowerShellHostName = ''
@@ -65,8 +65,10 @@
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport = @(
-        'DscExecConfiguration'
-        'DscExecResource'
+        'Get-DesiredState'
+        'Set-DesiredState'
+        'Test-DesiredState'
+        'Invoke-DesiredState'
     )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

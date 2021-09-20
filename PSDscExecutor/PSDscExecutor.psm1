@@ -34,5 +34,5 @@ $Script:PSModuleVersion = (Import-PowerShellDataFile -Path "$Script:PSModulePath
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 'Latest'
 
-# Now, register all available DSC resource functions
-# Get-DscResource | Register-DscResourceFunction -Scope 'Script'
+# Module-wide variables to cache the module state
+$Script:DscResourceCache = [System.Collections.ArrayList]::new()
