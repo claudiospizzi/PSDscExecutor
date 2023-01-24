@@ -1,13 +1,14 @@
 ﻿<#
     .SYNOPSIS
         Perform get, set and test methods to bring the target system into the
-        desired state.
+        desired state. It will continue to test and set until the target system
+        is in desired state.
 
     .DESCRIPTION
         This command uses the specified DSC configuration together with the
-        configuraiton data and parameters to generate the desired resource.
-        This resources will then be invoked with the Invoke-DscResource, all
-        without applying a configuration to a LCM.
+        configuration data and parameters to generate the desired resource. This
+        resources will then be invoked with the Invoke-DscResource, all without
+        applying a configuration to a LCM.
 
     .INPUTS
         None.
@@ -73,10 +74,11 @@ function Invoke-DesiredState
     {
         # Enable the information output by default. If the user specifies the
         # information action parameter, the users choise is respected.
-        $informationAction = $InformationPreference
+        # $informationAction = $InformationPreference
         if (-not $PSBoundParameters.ContainsKey('InformationAction'))
         {
-            $informationAction = 'Continue'
+            $InformationPreference = 'Continue'
+            # $informationAction = 'Continue'
         }
 
         $invokeDesiredStateSplat = @{
@@ -87,7 +89,7 @@ function Invoke-DesiredState
             ConfigurationName  = $ConfigurationName
             ConfigurationParam = $ConfigurationParam
             ConfigurationData  = $ConfigurationData
-            InformationAction  = $informationAction
+            # InformationAction  = $informationAction
         }
         Invoke-DesiredStateInternal @invokeDesiredStateSplat
     }

@@ -25,6 +25,10 @@ function ConvertTo-DscMofFile
         [System.Collections.Hashtable]
         $ConfigurationData,
 
+        [Parameter(Mandatory = $true)]
+        [System.Security.Cryptography.X509Certificates.X509Certificate2]
+        $Certificate,
+
         [Parameter(Mandatory = $false)]
         [System.String]
         $OutputPath
@@ -49,6 +53,9 @@ function ConvertTo-DscMofFile
             $OutputPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath ([System.IO.Path]::GetRandomFileName())
         }
 
+        # Define and export the certificate file
+        $certificateFile = "{0}\{1}.cer" -f ([System.IO.Path]::GetTempPath()), $certificate.Thumbprint
+
         # Patch the configuration data with the required node name and allow
         # domain users as well as plain text secrets.
         # TODO: Allow to use certificates for encrypted compilation
@@ -68,17 +75,34 @@ function ConvertTo-DscMofFile
             throw "The configuration data parameter contains more than one node. Only provide one node."
         }
         # 4. Set the required node properties
-        $ConfigurationData['AllNodes'][0]['NodeName']                    = 'localhost'
-        $ConfigurationData['AllNodes'][0]['PSDscAllowDomainUser']        = $true
-        $ConfigurationData['AllNodes'][0]['PSDSCAllowPlainTextPassword'] = $true
+        $ConfigurationData['AllNodes'][0]['NodeName']             = 'localhost'
+        $ConfigurationData['AllNodes'][0]['CertificateFile']      = $certificateFile
+        $ConfigurationData['AllNodes'][0]['Thumbprint']           = $certificate.Thumbprint
+        # $ConfigurationData['AllNodes'][0]['PSDscAllowDomainUser'] = $true
+        # $ConfigurationData['AllNodes'][0]['PSDSCAllowPlainTextPassword'] = $true
 
-        # Compile the DSC configuration into a DSC MOF configuration file
-        $mofConfigurationFile = & $ConfigurationName -ConfigurationData $ConfigurationData -OutputPath $OutputPath @ConfigurationParam
+        try
+        {
+            $certificate | Export-Certificate -FilePath $certificateFile -Force | Out-Null
 
-        Write-Output $mofConfigurationFile.FullName
+            # Compile the DSC configuration into a DSC MOF configuration file
+            $mofConfigurationFile = & $ConfigurationName -InstanceName 'localhost' -ConfigurationData $ConfigurationData -OutputPath $OutputPath @ConfigurationParam -ErrorAction 'Stop'
+
+            Write-Output $mofConfigurationFile.FullName
+        }
+        finally
+        {
+            if (Test-Path -Path $certificateFile)
+            {
+                # Remove-Item -Path $certificateFile -Force -ErrorAction 'SilentlyContinue'
+            }
+        }
     }
     catch
     {
         $PSCmdlet.ThrowTerminatingError($_)
+    }
+    finally
+    {
     }
 }

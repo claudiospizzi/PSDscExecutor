@@ -6,27 +6,81 @@ Configuration WS2022
         # Name of the target computer.
         [Parameter(Mandatory = $true)]
         [System.String]
-        $ComputerName
+        $ComputerName,
+
+        # Name of the AD domain.
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DomainName,
+
+        # AD domain NetBIOS.
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DomainNetBIOS,
+
+        # AD domain credential.
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]
+        $DomainCredential,
+
+        # The DSRM restore mode password.
+        [Parameter(Mandatory = $true)]
+        [System.Security.SecureString]
+        $DomainSafeModePassword
     )
 
-    Import-DscResource -ModuleName 'PSDscResources' -ModuleVersion '2.12.0.0'
+    Import-DscResource -ModuleName 'PSDesiredStateConfiguration' -ModuleVersion '1.1'
     Import-DscResource -ModuleName 'ComputerManagementDsc' -ModuleVersion '8.5.0'
+    Import-DscResource -ModuleName 'NetworkingDsc' -ModuleVersion '8.2.0'
+    Import-DscResource -ModuleName 'ActiveDirectoryDsc' -ModuleVersion '6.0.1'
 
-    Computer 'Computer Name'
+    Node $AllNodes.NodeName
     {
-        Name        = $ComputerName
-        Description = 'Windows Server 2022 ;-)'
-    }
+        Computer 'Computer Name'
+        {
+            Name        = $ComputerName
+            Description = 'Domain Controller'
+        }
 
-    PowerPlan 'High Performance'
-    {
-        IsSingleInstance = 'Yes'
-        Name             = 'High Performance'
-    }
+        PowerPlan 'High Performance'
+        {
+            IsSingleInstance = 'Yes'
+            Name             = 'High Performance'
+        }
 
-    WindowsFeature 'DNS Feature'
-    {
-        Ensure = 'Present'
-        Name   = 'RSAT-DNS-Server'
+        WindowsFeature 'RSAT DNS Feature'
+        {
+            Ensure = 'Present'
+            Name   = 'RSAT-DNS-Server'
+        }
+
+        WindowsFeature 'RSAT ADDS PowerShell Feature'
+        {
+            Ensure = 'Present'
+            Name   = 'RSAT-AD-PowerShell'
+        }
+
+        WindowsFeature 'WIN-Domain-ADDSFeature'
+        {
+            Ensure    = 'Present'
+            Name      = 'AD-Domain-Services'
+        }
+
+        ADDomain 'WIN-Domain-InstallForest'
+        {
+            DomainName                    = $DomainName
+            DomainNetbiosName             = $DomainNetBIOS
+            Credential                    = $DomainCredential
+            SafemodeAdministratorPassword = ConvertTo-WindowsCredential -Username 'dsrm' -Password $DomainSafeModePassword
+        }
+
+        DnsServerAddress 'WIN-Network-IPv4-DnsServer'
+        {
+            InterfaceAlias = 'Ethernet'
+            AddressFamily  = 'IPv4'
+
+            Address        = '127.0.0.1'
+            Validate       = $false
+        }
     }
 }

@@ -21,7 +21,19 @@ Microsoft 365.
   Test if all resources in a configuration are in the desired state.
 
 * **Set-DesiredState**  
-  Apply the desired state configuration to the targets.
+  Apply the desired state configuration to the targets once.
+
+* **Invoke-DesiredState**  
+  Perform get, set and test methods to bring the target system into the desired
+  state. It will continue to test and set until the target system is in desired
+  state.
+
+## Restrictions
+
+This module has some limitations that need to be considered when it is used.
+
+* Windows PowerShell 5.1: Don't use the PSDscResources module, as it is in
+  conflict with the built-in PSDesiredStateConfiguration 1.1.
 
 ## Versions
 

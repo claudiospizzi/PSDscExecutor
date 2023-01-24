@@ -33,7 +33,7 @@ function Invoke-DesiredStateInternal
         [System.String]
         $ComputerName,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [AllowNull()]
         [System.Management.Automation.PSCredential]
         $Credential,
@@ -79,6 +79,8 @@ function Invoke-DesiredStateInternal
             Import-Module -Name $moduleInfo.Name -RequiredVersion $moduleInfo.Version -Verbose:$false
         }
 
+        $certificate = Get-DscExecCertificate -CreateIfNotExist
+
         try
         {
             Write-Verbose "DSC Compile: Invoke Configuration $ConfigurationFile"
@@ -86,7 +88,7 @@ function Invoke-DesiredStateInternal
             # Compile the DSC configuration into a DSC MOF file. Provide the
             # configuration data and parameters.
             Update-DscResourceCache -ModuleInfo $moduleInfos -Clear
-            $mofFile = ConvertTo-DscMofFile -ConfigurationFile $ConfigurationFile -ConfigurationName $ConfigurationName -ConfigurationParam $ConfigurationParam -ConfigurationData $ConfigurationData
+            $mofFile = ConvertTo-DscMofFile -ConfigurationFile $ConfigurationFile -ConfigurationName $ConfigurationName -ConfigurationParam $ConfigurationParam -ConfigurationData $ConfigurationData -Certificate $certificate
 
             Write-Verbose "DSC Compile: Extract Configuration Resources $mofFile"
 
@@ -99,7 +101,7 @@ function Invoke-DesiredStateInternal
         {
             # Ensure the DSC MOF file is removed after using, as the file could
             # potentially contain sensitive data.
-            if ($null -ne $mofFile)
+            if ($null -ne $mofFile -and (Test-Path -Path $mofFile))
             {
                 Remove-Item -Path $mofFile -Force
             }
@@ -107,8 +109,10 @@ function Invoke-DesiredStateInternal
 
         try
         {
+            $session = $null
+
             # ToDo: Create a command to open a session
-            if ($PSBoundParameters.ContainsKey('Credential'))
+            if ($PSBoundParameters.ContainsKey('Credential') -and $null -ne $Credential)
             {
                 Write-Verbose "DSC Execution: Open Session on $ComputerName as $($Credential.Username)"
 
@@ -145,23 +149,23 @@ function Invoke-DesiredStateInternal
             {
                 if ($Method -in 'Get', 'Set', 'Test')
                 {
-                    Invoke-DesiredStateResource -Session $Session -Method $Method -Resource $Resource
+                    Invoke-DesiredStateResource -Session $session -Method $Method -Resource $Resource
                 }
                 else
                 {
-                    $testState = Invoke-DesiredStateResource -Session $Session -Method 'Test' -Resource $Resource
+                    $testState = Invoke-DesiredStateResource -Session $session -Method 'Test' -Resource $Resource
                     while (-not $testState.State.InDesiredState)
                     {
-                        $setState = Invoke-DesiredStateResource -Session $Session -Method 'Set' -Resource $Resource
+                        $setState = Invoke-DesiredStateResource -Session $session -Method 'Set' -Resource $Resource
                         if ($setState.State.RebootRequired)
                         {
-                            Invoke-Command -Session $Session -ScriptBlock { shutdown -r -t 0 }
+                            Invoke-Command -Session $session -ScriptBlock { shutdown -r -t 0 }
                             Remove-PSSession -Session $session -ErrorAction 'SilentlyContinue'
                             Start-Sleep -Second 15
                             $session = New-PSSession -ComputerName $ComputerName -Credential $Credential
                         }
 
-                        $testState = Invoke-DesiredStateResource -Session $Session -Method 'Test' -Resource $Resource
+                        $testState = Invoke-DesiredStateResource -Session $session -Method 'Test' -Resource $Resource
                     }
                 }
             }
