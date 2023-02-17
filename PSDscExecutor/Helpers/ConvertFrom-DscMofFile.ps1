@@ -15,7 +15,7 @@
     .EXAMPLE
         PS C:\> ConvertFrom-DscMofFile -Path .\MyConfig.mof
         Convert the provided DSC MOF configuration file to a PowerShell object
-        with the DSC configuration and resouces.
+        with the DSC configuration and resources.
 
     .LINK
         https://github.com/claudiospizzi/PSDscExecutor
@@ -80,7 +80,7 @@ function ConvertFrom-DscMofFile
 
                 foreach ($propertyDefinition in $mofCimInstance.CimInstanceProperties)
                 {
-                    # Skip the defualt properties, not custom to a resource.
+                    # Skip the default properties, not custom to a resource.
                     if ($propertyDefinition.Name -in 'ResourceId', 'ModuleName', 'ModuleVersion', 'SourceInfo', 'DependsOn', 'ConfigurationName', 'PsDscRunAsCredential')
                     {
                         continue

@@ -41,7 +41,7 @@ function Update-DscResourceCache
         # list to enable re-importing all DSC resources.
         if ($Clear.IsPresent)
         {
-            Write-Verbose 'DSC Resource Cache: Clear and Reset'
+            Write-Verbose '[PSDscExecutor] DSC Resource Cache: Clear and Reset'
 
             $Script:DscResourceCache.Clear()
 
@@ -70,7 +70,7 @@ function Update-DscResourceCache
             # already imported.
             if (-not $Script:DscResourceCache.Contains($moduleId))
             {
-                Write-Verbose "DSC Resource Cache: Add Module $moduleId"
+                Write-Verbose "[PSDscExecutor] DSC Resource Cache: Add Module $moduleId"
 
                 try
                 {

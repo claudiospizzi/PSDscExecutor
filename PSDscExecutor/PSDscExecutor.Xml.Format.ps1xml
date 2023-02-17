@@ -2,74 +2,68 @@
 <Configuration>
   <ViewDefinitions>
 
-
-
-  <!--
-    PSDscExecutor.Result.Get
-    PSDscExecutor.Result.Set
-    PSDscExecutor.Result.Test
-    PSDscExecutor.Result.Invoke
-    PSDscExecutor.ModuleInfo
-    PSDscExecutor.Configuration
-    PSDscExecutor.Configuration.Resource
-    -->
-
-
-
-<!--
     <View>
-      <Name>ArcadeTools.AccessEntry</Name>
+      <Name>PSDscExecutor.Result</Name>
       <ViewSelectedBy>
-        <TypeName>ArcadeTools.AccessEntry</TypeName>
+        <TypeName>PSDscExecutor.Result.Get</TypeName>
+        <TypeName>PSDscExecutor.Result.Set</TypeName>
+        <TypeName>PSDscExecutor.Result.Test</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <PropertyName>Path</PropertyName>
+        <PropertyName>ComputerName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
-            <Label>Type</Label>
-            <Width>8</Width>
+            <Label>Module</Label>
+            <Width>24</Width>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Principal</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>AccessRight</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>IsInherited</Label>
+            <Label>Version</Label>
             <Width>12</Width>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>AppliesTo</Label>
-            <Width>34</Width>
+            <Label>Resource</Label>
+            <Width>18</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Name</Label>
+            <Width>24</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Action</Label>
+            <Width>8</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>State</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>Type</PropertyName>
+                <PropertyName>Module</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Principal</PropertyName>
+                <PropertyName>Version</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>AccessRight</PropertyName>
+                <PropertyName>Resource</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>IsInherited</PropertyName>
+                <ScriptBlock>$_.Description.Split(':')[0]</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>AppliesTo</PropertyName>
+                <ScriptBlock>$_.PSTypeNames[0].Split('.')[-1]</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>State</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
         </TableRowEntries>
       </TableControl>
-    </View> -->
-
+    </View>
 
   </ViewDefinitions>
 </Configuration>

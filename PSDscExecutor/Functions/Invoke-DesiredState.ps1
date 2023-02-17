@@ -74,7 +74,12 @@ function Invoke-DesiredState
         [Parameter(Mandatory = $false)]
         [ValidateSet('RebootAndContinue', 'ContinueWithoutReboot', 'ExitConfiguration', 'Inquire')]
         [System.String]
-        $RebootPolicy = 'Inquire'
+        $RebootPolicy = 'Inquire',
+
+        # Pass the result object to the output stream.
+        [Parameter(Mandatory = $false)]
+        [Switch]
+        $PassThru
     )
 
     try
@@ -97,6 +102,7 @@ function Invoke-DesiredState
             ConfigurationParam = $ConfigurationParam
             ConfigurationData  = $ConfigurationData
             RebootPolicy       = $RebootPolicy
+            PassThru           = $PassThru.IsPresent
             InformationAction  = $informationAction
         }
         Invoke-DesiredStateInternal @invokeDesiredStateSplat

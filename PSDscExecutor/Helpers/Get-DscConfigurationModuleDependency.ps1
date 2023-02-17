@@ -32,7 +32,7 @@ function Get-DscConfigurationModuleDependency
             $moduleName    = ''
             $moduleVersion = ''
 
-            # Check all command elements excluding the first (command iteslf)
+            # Check all command elements excluding the first (command itself)
             # and the last (parameter value) for a parameters. If a parameter
             # was, go to the next element to get the parameter value.
             $astImportCommandElements = @($astImportCommand.CommandElements)
