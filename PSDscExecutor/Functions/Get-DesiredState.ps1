@@ -4,9 +4,9 @@
 
     .DESCRIPTION
         This command uses the specified DSC configuration together with the
-        configuraiton data and parameters to generate the desired resource.
-        This resources will then be invoked with the Invoke-DscResource, all
-        without applying a configuration to a LCM.
+        configuration data and parameters to generate the desired resource. This
+        resources will then be called with the Invoke-DscResource, all without
+        applying a configuration to a LCM.
 
     .INPUTS
         None.
@@ -41,9 +41,9 @@ function Get-DesiredState
         [System.Management.Automation.PSCredential]
         $Credential,
 
-        # Path to the DSC configuration file. Should contain a configuration
-        # named like the configuration file itself or the ConfigurationName
-        # parameter is required.
+        # Path to the DSC configuration file. The configuration name should
+        # match the configuration file name. If not, the configuration name must
+        # be specified in the ConfigurationName parameter.
         [Parameter(Mandatory = $true)]
         [Alias('File', 'Path')]
         [ValidateScript({ Test-Path -Path $_ })]
@@ -51,7 +51,7 @@ function Get-DesiredState
         $ConfigurationFile,
 
         # Name of the configuration to compile. Default is the configuration
-        # base file name. If the configuration name is diffrent, this parameter
+        # base file name. If the configuration name is different, this parameter
         # is required.
         [Parameter(Mandatory = $false)]
         [System.String]
@@ -70,8 +70,9 @@ function Get-DesiredState
 
     try
     {
-        # Enable the information output by default. If the user specifies the
-        # information action parameter, the users choise is respected.
+        # Enable the information output by default. The InformationPreference
+        # variable will hold the value of the InformationAction parameter, if it
+        # was specified by the caller. This will be respected.
         $informationAction = $InformationPreference
         if (-not $PSBoundParameters.ContainsKey('InformationAction'))
         {
