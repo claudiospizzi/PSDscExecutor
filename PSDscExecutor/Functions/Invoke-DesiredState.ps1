@@ -67,7 +67,14 @@ function Invoke-DesiredState
         # The configuration data used while compiling the configuration.
         [Parameter(Mandatory = $false)]
         [System.Collections.Hashtable]
-        $ConfigurationData = @{}
+        $ConfigurationData = @{},
+
+        # Device how the executor will handle a reboot request of a DSC
+        # resource. By default, the user is queried for every reboot.
+        [Parameter(Mandatory = $false)]
+        [ValidateSet('RebootAndContinue', 'ContinueWithoutReboot', 'ExitConfiguration', 'Inquire')]
+        [System.String]
+        $RebootPolicy = 'Inquire'
     )
 
     try
@@ -89,6 +96,7 @@ function Invoke-DesiredState
             ConfigurationName  = $ConfigurationName
             ConfigurationParam = $ConfigurationParam
             ConfigurationData  = $ConfigurationData
+            RebootPolicy       = $RebootPolicy
             InformationAction  = $informationAction
         }
         Invoke-DesiredStateInternal @invokeDesiredStateSplat
