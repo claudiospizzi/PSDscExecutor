@@ -5,11 +5,33 @@
 
 # PSDscExecutor PowerShell Module
 
-Create and execute PowerShell DSC configurations without using the LCM.
+Create and execute PowerShell DSC configurations without managing the LCM.
 
 ## Introduction
 
 The PSDscExecutor uses the `Invoke-DscResource` cmdlet to invoke a DSC configuration without the need of manual compiling and invoking via a DSC LCM. This is especially useful, if DSC is used embedded in other controller scripts or to configure cloud services like Microsoft 365.
+
+### Why PSDscExecutor?
+
+But why should you use the **PSDscExecutor** over the built-in `Invoke-DscResource` cmdlet?
+
+* Use PowerShell DSC configurations instead of single resources, including all benefits like auto-completion
+* Detect and install all PowerShell modules dependencies on the target systems
+* Use a local ad-hoc encryption certificate to protect secrets in the DSC configurations
+* On the fly compiling to MOF and interpreting the compiled MOF
+* Handle reboot with multiple options: always reboot, never reboot and continue, never reboot and quit or as the user.
+* Option to execute only the **get** method for all resources to get the current state (as objects) by using `Get-DesiredState`
+* Option to execute only the **test** method for all resources to check the desired state without applying it by using `Test-DesiredState`
+* Option to execute only the **set** method for all resources to invoke the desired state but not checking it by using `Set-DesiredState` (maybe not so useful)
+* **Invoke** the DSC configurations by using `Invoke-DesiredState` to bring it to the desired state by executing the **test** and **set** methods, if required in a loop, until the resource is in desired state
+
+### Are there some limitations in PSDscExecutor?
+
+Yes, the module is designed to execute the commands locally or on a single remote system.
+
+* Multiple remote systems (nodes in the DSC configuration) are not supported
+* It's required to use Windows PowerShell 5.1 because of a bug in the DSC configuration compilation in PowerShell 6/7
+* Administrator permissions are required if invoked against the local system because in the background the `Invoke-DscResource` cmdlet is used which interacts with the LCM and the system wide module store
 
 ## Features
 
@@ -24,12 +46,6 @@ The PSDscExecutor uses the `Invoke-DscResource` cmdlet to invoke a DSC configura
 
 * **Invoke-DesiredState**  
   Perform get, set and test methods to bring the target system into the desired state. It will continue to test and set until the target system is in desired state.
-
-## Restrictions
-
-This module has some limitations that need to be considered when it is used.
-
-* Windows PowerShell 5.1: Don't use the PSDscResources module, as it is in conflict with the built-in PSDesiredStateConfiguration 1.1.
 
 ## Versions
 
@@ -54,12 +70,10 @@ Alternatively, download the latest release from GitHub and install the module ma
 The following minimum requirements are necessary to use this module, or in other words are used to test this module:
 
 * Windows PowerShell 5.1
-* PowerShell 7
 
 ## Contribute
 
-Please feel free to contribute to this project. For the best development
-experience, please us the following tools:
+Please feel free to contribute to this project. For the best development experience, please us the following tools:
 
 * [Visual Studio Code] with the [PowerShell Extension]
 * [Pester], [PSScriptAnalyzer], [InvokeBuild], [PSDscExecutor] modules

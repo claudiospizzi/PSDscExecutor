@@ -21,7 +21,7 @@
     Copyright = 'Copyright (c) 2021 by Claudio Spizzi. Licensed under MIT license.'
 
     # Description of the functionality provided by this module
-    Description = 'Create and execute PowerShell DSC configurations without using the LCM.'
+    Description = 'Create and execute PowerShell DSC configurations without managing the LCM.'
 
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion = '5.1'
