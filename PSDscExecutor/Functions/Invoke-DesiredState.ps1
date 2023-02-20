@@ -1,8 +1,8 @@
 ﻿<#
     .SYNOPSIS
-        Perform get, set and test methods to bring the target system into the
-        desired state. It will continue to test and set until the target system
-        is in desired state.
+        Perform test and set methods to bring the target system into the desired
+        state. It will continue and loop until the target resource is in desired
+        state.
 
     .DESCRIPTION
         This command uses the specified DSC configuration together with the
@@ -10,11 +10,28 @@
         resources will then be called with the Invoke-DscResource, all without
         applying a configuration to a LCM.
 
+        The command can be used in three modes:
+
+        - ConfigurationName only
+            The specified configuration name must already be imported into the
+            current PowerShell host. The required definition will be extracted
+            of the configuration command definition.
+
+        - ConfigurationName with ConfigurationFile
+            The specified configuration name must exist in the configuration
+            file. The required modules are installed before the configuration is
+            compiled.
+
+        - ConfigurationName with ConfigurationScript
+            The specified configuration name must exist in the specified script
+            block. The required modules are installed before the configuration
+            is compiled.
+
     .INPUTS
         None.
 
     .OUTPUTS
-        PSDscExecutor.Result.Invoke.
+        PSDscExecutor.Result.Test. PSDscExecutor.Result.Set.
 
     .EXAMPLE
         PS C:\> Invoke-DesiredState
@@ -25,9 +42,39 @@
 #>
 function Invoke-DesiredState
 {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ConfigurationName')]
     param
     (
+        # Name of the configuration to be used. Always required.
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ConfigurationName,
+
+        # If the configuration is stored in an external PowerShell script file,
+        # this can be specified with this parameter.
+        [Parameter(Mandatory = $true, ParameterSetName = 'ConfigurationFile')]
+        [ValidateScript({ Test-Path -Path $_ })]
+        [System.String]
+        $ConfigurationFile,
+
+        # If the configuration is stored in an existing script block, this can
+        # be passed by this parameter.
+        [Parameter(Mandatory = $true, ParameterSetName = 'ConfigurationScript')]
+        [System.Management.Automation.ScriptBlock]
+        $ConfigurationScript,
+
+        # PowerShell script parameters for the DSC configuration file. No
+        # parameters are passed if not specified.
+        [Parameter(Mandatory = $false)]
+        [System.Collections.Hashtable]
+        $ConfigurationParam = @{},
+
+        # The configuration data used while compiling the configuration. No
+        # configuration data is passed if not specified.
+        [Parameter(Mandatory = $false)]
+        [System.Collections.Hashtable]
+        $ConfigurationData = @{},
+
         # If specified, the DSC configuration will be invoked on the remote
         # host. If not, it is invoked locally. It always uses a PowerShell
         # Remoting (PSSession) to execute the DSC configuration.
@@ -43,34 +90,8 @@ function Invoke-DesiredState
         [System.Management.Automation.PSCredential]
         $Credential,
 
-        # Path to the DSC configuration file. The configuration name should
-        # match the configuration file name. If not, the configuration name must
-        # be specified in the ConfigurationName parameter.
-        [Parameter(Mandatory = $true)]
-        [Alias('File', 'Path')]
-        [ValidateScript({ Test-Path -Path $_ })]
-        [System.String]
-        $ConfigurationFile,
-
-        # Name of the configuration to compile. Default is the configuration
-        # base file name. If the configuration name is different, this parameter
-        # is required.
-        [Parameter(Mandatory = $false)]
-        [System.String]
-        $ConfigurationName,
-
-        # PowerShell script parameters for the DSC configuration file.
-        [Parameter(Mandatory = $false)]
-        [System.Collections.Hashtable]
-        $ConfigurationParam = @{},
-
-        # The configuration data used while compiling the configuration.
-        [Parameter(Mandatory = $false)]
-        [System.Collections.Hashtable]
-        $ConfigurationData = @{},
-
-        # Device how the executor will handle a reboot request of a DSC
-        # resource. By default, the user is queried for every reboot.
+        # Decide, how the executor will handle a reboot request of DSC
+        # resources. By default, the user is queried for every pending reboot.
         [Parameter(Mandatory = $false)]
         [ValidateSet('RebootAndContinue', 'ContinueWithoutReboot', 'ExitConfiguration', 'Inquire')]
         [System.String]
@@ -93,18 +114,34 @@ function Invoke-DesiredState
             $informationAction = 'Continue'
         }
 
+        # Define the basic parameter splat to call the internal invoke method.
+        # This also includes the always required configuration name.
         $invokeDesiredStateSplat = @{
             Method             = 'Invoke'
-            ComputerName       = $ComputerName
-            Credential         = $Credential
-            ConfigurationFile  = $ConfigurationFile
             ConfigurationName  = $ConfigurationName
             ConfigurationParam = $ConfigurationParam
             ConfigurationData  = $ConfigurationData
+            ComputerName       = $ComputerName
+            Credential         = $Credential
             RebootPolicy       = $RebootPolicy
             PassThru           = $PassThru.IsPresent
             InformationAction  = $informationAction
         }
+
+        # If using the parameter set for configuration file or script, extend
+        # the basic parameter splat.
+        switch ($PSCmdlet.ParameterSetName)
+        {
+            'ConfigurationFile'
+            {
+                $invokeDesiredStateSplat['ConfigurationFile'] = $ConfigurationName
+            }
+            'ConfigurationScript'
+            {
+                $invokeDesiredStateSplat['ConfigurationScript'] = $ConfigurationScript
+            }
+        }
+
         Invoke-DesiredStateInternal @invokeDesiredStateSplat
     }
     catch

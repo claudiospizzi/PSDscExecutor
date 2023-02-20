@@ -1,6 +1,7 @@
 ﻿<#
     .SYNOPSIS
-        Parse the DSC configuration file for module dependencies.
+        Parse the DSC configuration definition, which is actually the source
+        code of the configuration node, to extract the module dependencies.
 #>
 function Get-DscConfigurationModuleDependency
 {
@@ -9,19 +10,21 @@ function Get-DscConfigurationModuleDependency
     (
         [Parameter(Mandatory = $true)]
         [System.String]
-        $ConfigurationFile
+        $ConfigurationDefinition
     )
 
     try
     {
         $VerbosePreference = 'SilentlyContinue'
 
+        Write-Verbose "[PSDscExecutor] DSC Module Dependency: Parse the configuration definition and extract the module dependencies"
+
         $tokens = $null
         $errors = $null
 
         # Query for all Import-DscResource statements in the configuration file
         # by using the abstract syntax tree (AST).
-        $ast = [System.Management.Automation.Language.Parser]::ParseFile($ConfigurationFile, [ref]$tokens, [ref]$errors)
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput($ConfigurationDefinition, [ref]$tokens, [ref]$errors)
         $astImportCommandQuery = { param($astObject) $astObject -is [System.Management.Automation.Language.DynamicKeywordStatementAst] -and $astObject.Extent.Text -like 'Import-DscResource *' }
         $astImportCommands = $ast.FindAll($astImportCommandQuery, $true)
 

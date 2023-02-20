@@ -1,66 +1,66 @@
 ﻿<#
     .SYNOPSIS
-        .
-
-    .DESCRIPTION
-        .
-
-    .INPUTS
-        .
-
-    .OUTPUTS
-        .
-
-    .EXAMPLE
-        PS C:\> Invoke-DesiredStateInternal
-        .
-
-    .LINK
-        https://github.com/claudiospizzi/PSDscExecutor
+        Internal method to simplify the invocation independent of the used DSC
+        method like get, set, test or invoke.
 #>
 function Invoke-DesiredStateInternal
 {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'ConfigurationName')]
     param
     (
+        # Specify which method should be executed. The invoke method is a
+        # combination of test and set with a loop to ensure the desired state of
+        # a system as the command has finished.
         [Parameter(Mandatory = $true)]
         [ValidateSet('Get', 'Set', 'Test', 'Invoke')]
         [System.String]
         $Method,
 
+        # Name of the configuration.
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $ConfigurationName,
+
+        # Path to the configuration file, if used.
+        [Parameter(Mandatory = $true, ParameterSetName = 'ConfigurationFile')]
+        [ValidateScript({ Test-Path -Path $_ })]
+        [System.String]
+        $ConfigurationFile,
+
+        # Script definition of the configuration, if used.
+        [Parameter(Mandatory = $true, ParameterSetName = 'ConfigurationScript')]
+        [System.Management.Automation.ScriptBlock]
+        $ConfigurationScript,
+
+        # The configuration parameter. Always passed, but can be an empty.
+        [Parameter(Mandatory = $true)]
+        [System.Collections.Hashtable]
+        $ConfigurationParam,
+
+        # The configuration parameter. Always passed, but can be an empty.
+        [Parameter(Mandatory = $true)]
+        [System.Collections.Hashtable]
+        $ConfigurationData,
+
+        # The remoting computer name. Always passed, but can be an empty string.
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [System.String]
         $ComputerName,
 
+        # The remoting credential. Always passed, but can be an empty.
         [Parameter(Mandatory = $false)]
         [AllowNull()]
         [System.Management.Automation.PSCredential]
         $Credential,
 
-        [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -Path $_ })]
-        [System.String]
-        $ConfigurationFile,
-
-        [Parameter(Mandatory = $true)]
-        [AllowEmptyString()]
-        [System.String]
-        $ConfigurationName,
-
-        [Parameter(Mandatory = $true)]
-        [System.Collections.Hashtable]
-        $ConfigurationParam = @{},
-
-        [Parameter(Mandatory = $true)]
-        [System.Collections.Hashtable]
-        $ConfigurationData = @{},
-
+        # Definition of the reboot behavior.
         [Parameter(Mandatory = $true)]
         [ValidateSet('RebootAndContinue', 'ContinueWithoutReboot', 'ExitConfiguration', 'Inquire')]
         [System.String]
         $RebootPolicy,
 
+        # Option to return the output objects.
         [Parameter(Mandatory = $true)]
         [System.Boolean]
         $PassThru
@@ -68,32 +68,62 @@ function Invoke-DesiredStateInternal
 
     try
     {
-        # Prerequisite: Windows PowerShell 5.1
+        #region Prerequisite
+
+        # Check for Windows PowerShell 5.1
         if ($PSVersionTable.PSVersion.Major -gt 5)
         {
-            throw 'The PSDscExecutor requires Windows PowerShell 5.1 and does not support later PowerShell version because of a DSC incompatibility.'
+            # throw 'The PSDscExecutor requires Windows PowerShell 5.1 and does not support later PowerShell version because of a DSC incompatibility.'
         }
 
-        # Prerequisite: Administrator (if on localhost)
-        if ([System.String]::IsNullOrEmpty($ComputerName))
+        # If executing on the local system, ensure the ComputerName is set to
+        # localhost and the current process has Administrator privileges.
+        if ([System.String]::IsNullOrEmpty($ComputerName) -or $ComputerName -in 'localhost', '127.0.0.1', '::1', $Env:ComputerName -or $ComputerName -like "$Env:ComputerName.*")
         {
             if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
             {
-                throw 'The PSDscExecutor requires administrator privilege if invoked against the local system.'
+                # throw 'The PSDscExecutor requires administrator privilege if invoked against the local system.'
             }
-        }
 
-        # Parameter: ComputerName
-        if ([System.String]::IsNullOrEmpty($ComputerName))
-        {
             $ComputerName = 'localhost'
         }
 
-        # Parameter: ConfigurationName
-        if ([System.String]::IsNullOrEmpty($ConfigurationName))
+        #endregion
+
+        #region Module Dependency
+
+        # Load the configuration definition from memory, file or script block.
+        switch ($PSCmdlet.ParameterSetName)
         {
-            $ConfigurationName = [System.IO.Path]::GetFileNameWithoutExtension($ConfigurationFile)
+            'ConfigurationName'
+            {
+                $configurationDefinition = Get-DscConfigurationDefinition -ConfigurationName $ConfigurationName
+            }
+
+            'ConfigurationFile'
+            {
+                $configurationDefinition = Get-DscConfigurationDefinition -ConfigurationName $ConfigurationName -ConfigurationFile $ConfigurationFile
+            }
+
+            'ConfigurationScript'
+            {
+                $configurationDefinition = Get-DscConfigurationDefinition -ConfigurationName $ConfigurationName -ConfigurationScript $ConfigurationScript
+            }
         }
+
+        # Extract all depending modules from the configuration definition.
+        $moduleInfos = Get-DscConfigurationModuleDependency -ConfigurationDefinition $configurationDefinition
+
+        # ToDo: Install all dependency modules if they are not present yet
+
+
+
+
+        # ToDo
+        # Rewritten up to here with the new configuration parameter options. Continue below.
+        # **********************************************************************************
+
+
 
         # Module Dependencies
         $moduleInfos = Get-DscConfigurationModuleDependency -ConfigurationFile $ConfigurationFile
