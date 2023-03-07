@@ -35,8 +35,8 @@
         PSDscExecutor.Result.Set.
 
     .EXAMPLE
-        PS C:\> Invoke-DesiredState
-        ToDo.
+        PS C:\> Invoke-DesiredState -ConfigurationName 'WebServer'
+        Invoke the configuration WebServer on the local system.
 
     .LINK
         https://github.com/claudiospizzi/PSDscExecutor
@@ -46,7 +46,9 @@ function Invoke-DesiredState
     [CmdletBinding(DefaultParameterSetName = 'ConfigurationName')]
     param
     (
-        # Name of the configuration to be used. Always required.
+        # Name of the configuration to be used. Always required. Specify the
+        # configuration file or script, if the configuration is not already
+        # imported in the current session.
         [Parameter(Mandatory = $true)]
         [System.String]
         $ConfigurationName,
@@ -64,14 +66,14 @@ function Invoke-DesiredState
         [System.Management.Automation.ScriptBlock]
         $ConfigurationScript,
 
-        # PowerShell script parameters for the DSC configuration file. No
-        # parameters are passed if not specified.
+        # PowerShell script parameters for the DSC configuration file. By
+        # default, no parameters are passed.
         [Parameter(Mandatory = $false)]
         [System.Collections.Hashtable]
         $ConfigurationParam = @{},
 
-        # The configuration data used while compiling the configuration. No
-        # configuration data is passed if not specified.
+        # The configuration data used while compiling the configuration. By
+        # default, no configuration data is passed.
         [Parameter(Mandatory = $false)]
         [System.Collections.Hashtable]
         $ConfigurationData = @{},
