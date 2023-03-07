@@ -74,13 +74,13 @@ function Invoke-DesiredStateResource
         {
             if ($null -eq $Session)
             {
-                $result = Invoke-DscResource -Method 'Get' @resourceSplat
+                $($result = Invoke-DscResource -Method 'Get' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
             }
             else
             {
                 $result = Invoke-Command -Session $Session -ArgumentList $resourceSplat -ScriptBlock {
                     param ($ResourceSplat)
-                    Invoke-DscResource -Method 'Get' @resourceSplat
+                    $(Invoke-DscResource -Method 'Get' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
                 }
             }
 
@@ -90,7 +90,13 @@ function Invoke-DesiredStateResource
 
             foreach ($resultPropertyName in $result.PSObject.Properties.Name)
             {
-                Write-Information "$informationPrefix $resultPropertyName = $($result.$resultPropertyName)"
+                $resultPropertyValue = $result.$resultPropertyName
+                if ($Resource.ResourceName -eq 'Script' -and $resultPropertyName -eq 'Result')
+                {
+                    $resultPropertyValue = $resultPropertyValue | ConvertTo-Json -Depth 5 -Compress
+                }
+
+                Write-Information "$informationPrefix $resultPropertyName = $resultPropertyValue"
             }
 
             $resultObject.State = $result
@@ -100,13 +106,13 @@ function Invoke-DesiredStateResource
         {
             if ($null -eq $Session)
             {
-                $result = Invoke-DscResource -Method 'Set' @resourceSplat
+                $($result = Invoke-DscResource -Method 'Set' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
             }
             else
             {
                 $result = Invoke-Command -Session $Session -ArgumentList $resourceSplat -ScriptBlock {
                     param ($ResourceSplat)
-                    $result = Invoke-DscResource -Method 'Set' @resourceSplat
+                    $($result = Invoke-DscResource -Method 'Set' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
                     # It's important to convert the property into a boolean
                     # value, else the XML serialization will hit a "Serialized
                     # XML is nested too deeply." exception. Root cause unknown.
@@ -126,13 +132,13 @@ function Invoke-DesiredStateResource
         {
             if ($null -eq $Session)
             {
-                $result = Invoke-DscResource -Method 'Test' @resourceSplat
+                $($result = Invoke-DscResource -Method 'Test' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
             }
             else
             {
                 $result = Invoke-Command -Session $Session -ArgumentList $resourceSplat -ScriptBlock {
                     param ($ResourceSplat)
-                    $result = Invoke-DscResource -Method 'Test' @resourceSplat
+                    $($result = Invoke-DscResource -Method 'Test' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
                     # It's important to convert the property into a boolean
                     # value, else the XML serialization will hit a "Serialized
                     # XML is nested too deeply." exception. Root cause unknown.
