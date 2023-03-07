@@ -8,11 +8,6 @@ function ConvertTo-DscMofFile
     param
     (
         [Parameter(Mandatory = $true)]
-        [ValidateScript({ Test-Path -Path $_ })]
-        [System.String]
-        $ConfigurationFile,
-
-        [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [System.String]
         $ConfigurationName,
@@ -38,13 +33,11 @@ function ConvertTo-DscMofFile
     {
         $VerbosePreference = 'SilentlyContinue'
 
-        # Import the configuration file into the current function scope.
-        . $ConfigurationFile
-
         # Check if the configuration contains the expected command name.
-        if ((Get-Command -CommandType 'Configuration').Name -notcontains $ConfigurationName)
+        $configurationCommands = Get-Command -CommandType 'Configuration'
+        if ($null -eq $configurationCommands -or $configurationCommands.Name -notcontains $ConfigurationName)
         {
-            throw "The configuration file '$ConfigurationFile' does not contain the configuration named '$ConfigurationName'."
+            throw "The configuration '$ConfigurationName' does not exist."
         }
 
         # Create a temporary output path to store the compiled mof.

@@ -73,6 +73,7 @@ function Invoke-DesiredStateInternal
         # Check for Windows PowerShell 5.1
         if ($PSVersionTable.PSVersion.Major -gt 5)
         {
+            Write-Warning "THE PREREQUISITE CHECK FOR WINDOWS POWERSHELL 5.1 IS DISABLED!"
             # throw 'The PSDscExecutor requires Windows PowerShell 5.1 and does not support later PowerShell version because of a DSC incompatibility.'
         }
 
@@ -82,6 +83,7 @@ function Invoke-DesiredStateInternal
         {
             if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
             {
+                Write-Warning "THE PREREQUISITE CHECK FOR LOCAL ADMINISTRATOR ROLE IS DISABLED!"
                 # throw 'The PSDscExecutor requires administrator privilege if invoked against the local system.'
             }
 
@@ -114,37 +116,39 @@ function Invoke-DesiredStateInternal
         # Extract all depending modules from the configuration definition.
         $moduleInfos = Get-DscConfigurationModuleDependency -ConfigurationDefinition $configurationDefinition
 
-        # ToDo: Install all dependency modules if they are not present yet
-
-
-
-
-        # ToDo
-        # Rewritten up to here with the new configuration parameter options. Continue below.
-        # **********************************************************************************
-
-
-
-        # Module Dependencies
-        $moduleInfos = Get-DscConfigurationModuleDependency -ConfigurationFile $ConfigurationFile
+        # Install all dependency modules if they are not present yet.
         foreach ($moduleInfo in $moduleInfos)
         {
-            Write-Verbose "[PSDscExecutor] DSC Resource Dependency: Found Module $($moduleInfo.Name) $($moduleInfo.Version)"
-            Import-Module -Name $moduleInfo.Name -RequiredVersion $moduleInfo.Version -Verbose:$false -Force
+            Update-DscModuleInstallation -ModuleName $moduleInfo.Name -ModuleVersion $moduleInfo.Version -Import
         }
 
-        $certificate = Get-DscExecCertificate -CreateIfNotExist
+        #endregion
+
+        #region Compile Configuration
 
         try
         {
-            Write-Verbose "[PSDscExecutor] DSC Compile: Invoke Configuration $ConfigurationFile"
+            if ($PSCmdlet.ParameterSetName -in 'ConfigurationFile', 'ConfigurationScript')
+            {
+                Write-Verbose "[PSDscExecutor] DSC Compile Configuration: Interpret Configuration"
+
+                $configurationDefinitionScriptBlock = [System.Management.Automation.ScriptBlock]::Create($configurationDefinition)
+
+                . $configurationDefinitionScriptBlock
+            }
+
+            Write-Verbose "[PSDscExecutor] DSC Compile Configuration: Generate Certificate"
+
+            $certificate = Get-DscExecCertificate -CreateIfNotExist
+
+            Write-Verbose "[PSDscExecutor] DSC Compile Configuration: Invoke Compilation"
 
             # Compile the DSC configuration into a DSC MOF file. Provide the
             # configuration data and parameters.
             Update-DscResourceCache -ModuleInfo $moduleInfos -Clear
-            $mofFile = ConvertTo-DscMofFile -ConfigurationFile $ConfigurationFile -ConfigurationName $ConfigurationName -ConfigurationParam $ConfigurationParam -ConfigurationData $ConfigurationData -Certificate $certificate
+            $mofFile = ConvertTo-DscMofFile -ConfigurationName $ConfigurationName -ConfigurationParam $ConfigurationParam -ConfigurationData $ConfigurationData -Certificate $certificate
 
-            Write-Verbose "[PSDscExecutor] DSC Compile: Extract Configuration Resources $mofFile"
+            Write-Verbose "[PSDscExecutor] DSC Compile Configuration: Extract Configuration Resources $mofFile"
 
             # Now, convert the parsed DSC MOF configuration file back to a
             # PowerShell object
@@ -160,6 +164,10 @@ function Invoke-DesiredStateInternal
                 Remove-Item -Path $mofFile -Force
             }
         }
+
+        #endregion
+
+        #region Invoke Configuration
 
         try
         {
@@ -178,48 +186,6 @@ function Invoke-DesiredStateInternal
                     Write-Verbose "[PSDscExecutor] DSC Execution: Open Session on $ComputerName"
 
                     $session = New-PSSession -ComputerName $ComputerName
-                }
-            }
-
-            Write-Verbose "[PSDscExecutor] DSC Execution: Install and Import Provider NuGet 2.8.5.201"
-
-            $installPackageProviderScriptBlock = {
-                Install-PackageProvider -Name 'NuGet' -MinimumVersion '2.8.5.201' -Force -Verbose:$false | Out-Null
-            }
-
-            if ($null -eq $session)
-            {
-                $installPackageProviderScriptBlock.Invoke()
-            }
-            else
-            {
-                Invoke-Command -Session $session -ScriptBlock $installPackageProviderScriptBlock
-            }
-
-            foreach ($moduleInfo in $moduleInfos)
-            {
-                Write-Verbose "[PSDscExecutor] DSC Execution: Install and Import Module $($moduleInfo.Name) $($moduleInfo.Version)"
-
-                $installAndImportModuleScriptBlock = {
-                    param ($Name, $Version)
-
-                    $module = Get-Module -FullyQualifiedName @{ ModuleName = $Name; ModuleVersion = $Version } -ListAvailable -Verbose:$false | Where-Object { $_.ModuleBase -like 'C:\Program Files\*' }
-
-                    if ($null -eq $module)
-                    {
-                        Install-Module -Name $Name -RequiredVersion $Version -Scope 'AllUsers' -AllowClobber -SkipPublisherCheck -Force -Verbose:$false #-AcceptLicense
-                    }
-
-                    Import-Module -Name $Name -RequiredVersion $Version -Global -Force -Verbose:$false
-                }
-
-                if ($null -eq $session)
-                {
-                    $installAndImportModuleScriptBlock.Invoke($moduleInfo.Name, $moduleInfo.Version)
-                }
-                else
-                {
-                    Invoke-Command -Session $session -ScriptBlock $installAndImportModuleScriptBlock -ArgumentList $moduleInfo.Name, $moduleInfo.Version
                 }
             }
 
@@ -331,6 +297,20 @@ function Invoke-DesiredStateInternal
                 Remove-PSSession $session
             }
         }
+
+
+
+
+        #endregion
+
+        return
+
+
+
+        # ToDo
+        # Rewritten up to here with the new configuration parameter options. Continue below.
+        # **********************************************************************************
+
     }
     catch
     {

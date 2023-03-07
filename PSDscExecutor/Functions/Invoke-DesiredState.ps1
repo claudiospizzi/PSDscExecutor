@@ -31,11 +31,12 @@
         None.
 
     .OUTPUTS
-        PSDscExecutor.Result.Test. PSDscExecutor.Result.Set.
+        PSDscExecutor.Result.Test.
+        PSDscExecutor.Result.Set.
 
     .EXAMPLE
         PS C:\> Invoke-DesiredState
-        .
+        ToDo.
 
     .LINK
         https://github.com/claudiospizzi/PSDscExecutor
@@ -51,14 +52,14 @@ function Invoke-DesiredState
         $ConfigurationName,
 
         # If the configuration is stored in an external PowerShell script file,
-        # this can be specified with this parameter.
+        # it can be specified with this parameter.
         [Parameter(Mandatory = $true, ParameterSetName = 'ConfigurationFile')]
         [ValidateScript({ Test-Path -Path $_ })]
         [System.String]
         $ConfigurationFile,
 
-        # If the configuration is stored in an existing script block, this can
-        # be passed by this parameter.
+        # If the configuration is stored in an existing script block, it can be
+        # passed with this parameter.
         [Parameter(Mandatory = $true, ParameterSetName = 'ConfigurationScript')]
         [System.Management.Automation.ScriptBlock]
         $ConfigurationScript,
@@ -90,8 +91,8 @@ function Invoke-DesiredState
         [System.Management.Automation.PSCredential]
         $Credential,
 
-        # Decide, how the executor will handle a reboot request of DSC
-        # resources. By default, the user is queried for every pending reboot.
+        # Decide, how the executor will handle a reboot request of an invoked
+        # DSC resources. By default, the user is asked for every pending reboot.
         [Parameter(Mandatory = $false)]
         [ValidateSet('RebootAndContinue', 'ContinueWithoutReboot', 'ExitConfiguration', 'Inquire')]
         [System.String]
