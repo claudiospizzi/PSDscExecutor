@@ -135,7 +135,7 @@ function Test-DesiredState
         {
             'ConfigurationFile'
             {
-                $invokeDesiredStateSplat['ConfigurationFile'] = $ConfigurationName
+                $invokeDesiredStateSplat['ConfigurationFile'] = $ConfigurationFile
             }
             'ConfigurationScript'
             {
