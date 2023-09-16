@@ -4,8 +4,9 @@
 
     .DESCRIPTION
         Use the internal function ImportInstances() of the DSC DscClassCache
-        class to convert the DSC MOF configuration file into a PowerShell
-        object containing a list of DSC resources.
+        class to convert the DSC MOF configuration file into a PowerShell object
+        containing a list of DSC resources.
+
         The Update-DscResourceCache should be used prior to this command to
         ensure, the required resources are loaded into the cache.
 

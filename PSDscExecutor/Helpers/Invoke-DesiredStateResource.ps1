@@ -52,6 +52,7 @@ function Invoke-DesiredStateResource
             }
             Name       = $Resource.ResourceName
             Property   = $Resource.PropertiesModified
+            Verbose    = $false
         }
 
         # Template for the result object. The output state is appended after the
@@ -74,19 +75,26 @@ function Invoke-DesiredStateResource
         {
             if ($null -eq $Session)
             {
-                $($result = Invoke-DscResource -Method 'Get' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                # $($result = Invoke-DscResource -Method 'Get' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                $result = Invoke-DscResource -Method 'Get' @resourceSplat
             }
             else
             {
                 $result = Invoke-Command -Session $Session -ArgumentList $resourceSplat -ScriptBlock {
                     param ($ResourceSplat)
-                    $(Invoke-DscResource -Method 'Get' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                    # $(Invoke-DscResource -Method 'Get' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                    Invoke-DscResource -Method 'Get' @resourceSplat
                 }
             }
 
             # Exclude all default, PowerShell Remoting and CIM properties so
             # that we only have the properties for the actual DSC resource.
             $result = $result | Select-Object -Property '*' -ExcludeProperty 'PSComputerName', 'PSShowComputerName', 'RunspaceId', 'ResourceId', 'ModuleName', 'ModuleVersion', 'SourceInfo', 'DependsOn', 'ConfigurationName', 'PsDscRunAsCredential', 'CimClass', 'CimInstanceProperties', 'CimSystemProperties'
+
+            if ($null -eq $result)
+            {
+                throw 'The method "Get" for resource "{0}/{1}" did not return any data.' -f $Resource.ResourceName, $Resource.ResourceDescription.Split(':')[0]
+            }
 
             foreach ($resultPropertyName in $result.PSObject.Properties.Name)
             {
@@ -106,13 +114,15 @@ function Invoke-DesiredStateResource
         {
             if ($null -eq $Session)
             {
-                $($result = Invoke-DscResource -Method 'Set' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                # $($result = Invoke-DscResource -Method 'Set' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                $result = Invoke-DscResource -Method 'Set' @resourceSplat
             }
             else
             {
                 $result = Invoke-Command -Session $Session -ArgumentList $resourceSplat -ScriptBlock {
                     param ($ResourceSplat)
-                    $($result = Invoke-DscResource -Method 'Set' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                    # $($result = Invoke-DscResource -Method 'Set' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                    $result = Invoke-DscResource -Method 'Set' @resourceSplat
                     # It's important to convert the property into a boolean
                     # value, else the XML serialization will hit a "Serialized
                     # XML is nested too deeply." exception. Root cause unknown.
@@ -132,13 +142,15 @@ function Invoke-DesiredStateResource
         {
             if ($null -eq $Session)
             {
-                $($result = Invoke-DscResource -Method 'Test' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                # $($result = Invoke-DscResource -Method 'Test' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                $result = Invoke-DscResource -Method 'Test' @resourceSplat
             }
             else
             {
                 $result = Invoke-Command -Session $Session -ArgumentList $resourceSplat -ScriptBlock {
                     param ($ResourceSplat)
-                    $($result = Invoke-DscResource -Method 'Test' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                    # $($result = Invoke-DscResource -Method 'Test' @resourceSplat -Verbose) 4>&1 | Write-DscInformation
+                    $result = Invoke-DscResource -Method 'Test' @resourceSplat
                     # It's important to convert the property into a boolean
                     # value, else the XML serialization will hit a "Serialized
                     # XML is nested too deeply." exception. Root cause unknown.

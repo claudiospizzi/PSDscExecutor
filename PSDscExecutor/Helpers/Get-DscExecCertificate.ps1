@@ -25,7 +25,7 @@ function Get-DscExecCertificate
         # Certificate store for the encryption certificate.
         [Parameter(Mandatory = $false)]
         [System.String]
-        $CertStorePath = 'Cert:\CurrentUser\My',
+        $CertStorePath = 'Cert:\LocalMachine\My',
 
         # Encryption certificate subject.
         [Parameter(Mandatory = $false)]
@@ -40,15 +40,23 @@ function Get-DscExecCertificate
 
     try
     {
-        $certificate = Get-ChildItem -Path $CertStorePath |
-                           Where-Object { $_.Subject -eq "CN=$Subject" -and $_.HasPrivateKey -and $_.NotAfter -gt (Get-Date) } |
-                               Select-Object -First 1
+        $certificate =
+            Get-ChildItem -Path $CertStorePath |
+                Where-Object { $_.Subject -eq "CN=$Subject" -and $_.HasPrivateKey -and $_.NotAfter -gt (Get-Date) } |
+                    Select-Object -First 1
 
         if ($null -eq $certificate)
         {
             if ($CreateIfNotExist.IsPresent)
             {
-                $certificate = New-SelfSignedCertificate -CertStoreLocation $CertStorePath -Type 'DocumentEncryptionCertLegacyCsp' -DnsName $Subject -HashAlgorithm 'SHA256' -NotAfter (Get-Date).AddYears(10)
+                $certificateSplat = @{
+                    CertStoreLocation = $CertStorePath
+                    Type              = 'DocumentEncryptionCertLegacyCsp'
+                    DnsName           = $Subject
+                    HashAlgorithm     = 'SHA256'
+                    NotAfter          = [System.DateTime]::Now.AddYears(10)
+                }
+                $certificate = New-SelfSignedCertificate @certificateSplat
             }
             else
             {

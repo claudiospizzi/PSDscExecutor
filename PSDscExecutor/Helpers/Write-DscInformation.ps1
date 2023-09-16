@@ -29,7 +29,7 @@ function Write-DscInformation
         {
             if ($PSCmdlet.ParameterSetName -eq 'VerboseRecord')
             {
-                if ($messageFilters.Where({ $VerboseRecord.Message -like  $_ }).Count -gt 0)
+                if ($messageFilters.Where({ $VerboseRecord.Message -like $_ }).Count -gt 0)
                 {
                     return
                 }

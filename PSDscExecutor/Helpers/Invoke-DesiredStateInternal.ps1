@@ -159,9 +159,9 @@ function Invoke-DesiredStateInternal
         {
             # Ensure the DSC MOF file is removed after using, as the file could
             # potentially contain sensitive data.
-            if ($null -ne $mofFile -and (Test-Path -Path $mofFile))
+            if ((Get-Variable).Name -contains 'mofFile' -and $null -ne $mofFile -and (Test-Path -Path $mofFile))
             {
-                Remove-Item -Path $mofFile -Force
+                # Remove-Item -Path $mofFile -Force
             }
         }
 

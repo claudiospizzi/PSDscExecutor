@@ -1,29 +1,50 @@
 ﻿<#
     .SYNOPSIS
         Compile the DSC configuration into a DSC MOF file.
+
+    .DESCRIPTION
+        This command will use all provided configurations like the name, data
+        and parameter and will invoke the DSC compilation. It will return the
+        compiled DSC MOF file.
+
+    .OUTPUTS
+        System.String
+
+    .EXAMPLE
+        PS C:\> ConvertTo-DscMofFile -ConfigurationName 'WebServer'
+        Compile the DSC configuration for the web server.
+
+    .LINK
+        https://github.com/claudiospizzi/PSDscExecutor
 #>
 function ConvertTo-DscMofFile
 {
     [CmdletBinding()]
     param
     (
+        # The configuration to compile.
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [System.String]
         $ConfigurationName,
 
-        [Parameter(Mandatory = $true)]
+        # The configuration parameter values.
+        [Parameter(Mandatory = $false)]
         [System.Collections.Hashtable]
-        $ConfigurationParam,
+        $ConfigurationParam = @{},
 
-        [Parameter(Mandatory = $true)]
+        # The configuration data, should contain an AllNodes array with exactly
+        # one node. If not, the node is dynamically added.
+        [Parameter(Mandatory = $false)]
         [System.Collections.Hashtable]
-        $ConfigurationData,
+        $ConfigurationData = @{},
 
+        # The document encryption certificate for DSC to encrypt secrets.
         [Parameter(Mandatory = $true)]
         [System.Security.Cryptography.X509Certificates.X509Certificate2]
         $Certificate,
 
+        # Path where the DSC MOF file is stored.
         [Parameter(Mandatory = $false)]
         [System.String]
         $OutputPath
@@ -51,7 +72,6 @@ function ConvertTo-DscMofFile
 
         # Patch the configuration data with the required node name and allow
         # domain users as well as plain text secrets.
-        # TODO: Allow to use certificates for encrypted compilation
         # 1. Ensure the AllNodes key exists
         if (-not $ConfigurationData.ContainsKey('AllNodes'))
         {
@@ -68,11 +88,10 @@ function ConvertTo-DscMofFile
             throw "The configuration data parameter contains more than one node. Only provide one node."
         }
         # 4. Set the required node properties
-        $ConfigurationData['AllNodes'][0]['NodeName']             = 'localhost'
-        $ConfigurationData['AllNodes'][0]['CertificateFile']      = $certificateFile
-        $ConfigurationData['AllNodes'][0]['Thumbprint']           = $certificate.Thumbprint
-        # $ConfigurationData['AllNodes'][0]['PSDscAllowDomainUser'] = $true
-        # $ConfigurationData['AllNodes'][0]['PSDSCAllowPlainTextPassword'] = $true
+        $ConfigurationData['AllNodes'][0]['NodeName'] = 'localhost'
+        $ConfigurationData['AllNodes'][0]['CertificateFile'] = $certificateFile
+        $ConfigurationData['AllNodes'][0]['Thumbprint'] = $certificate.Thumbprint
+        $ConfigurationData['AllNodes'][0]['PSDscAllowDomainUser'] = $true
 
         try
         {
@@ -94,8 +113,5 @@ function ConvertTo-DscMofFile
     catch
     {
         $PSCmdlet.ThrowTerminatingError($_)
-    }
-    finally
-    {
     }
 }
